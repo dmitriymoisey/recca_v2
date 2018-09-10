@@ -8,13 +8,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-import utils.InitialCondition;
-import utils.MaterialData;
-import utils.SpecimenData;
+import utils.*;
 
 import javax.xml.crypto.Data;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class SpecimenDataEditor extends Stage {
@@ -27,13 +27,18 @@ public class SpecimenDataEditor extends Stage {
             angleRangeTextField,
             cellNumberXTextField,
             cellNumberYTextField,
-            cellNumberZTextField;
+            cellNumberZTextField,
+            cellSizeTextField;
 
-    private ComboBox materialsComboBox, initialConditionsComboBox,
+    private RadioButton stochasticRadioButton, fixedRadioButton;
+    private ToggleGroup structureTypeToggleGroup;
+
+    private ComboBox<String> materialsComboBox, initialConditionsComboBox,
             boundaryConditionsComboBox, tasksComboBox;
 
     private Button okButton, cancelButton;
     private Button editMaterial, editInitCond, editBoundCond, editTask;
+    private Button deleteMaterial, deleteInitCond, deleteBoundCond, deleteTask;
 
     public SpecimenDataEditor(){
         root = new BorderPane();
@@ -44,7 +49,7 @@ public class SpecimenDataEditor extends Stage {
         handleEvents();
 
         this.setScene(scene);
-        this.setTitle("TEST");
+        this.setTitle("Specimen - Data Editor");
         this.show();
     }
 
@@ -55,15 +60,32 @@ public class SpecimenDataEditor extends Stage {
         cellNumberXTextField.setText(String.valueOf(specimenData.getCellNumberX()));
         cellNumberYTextField.setText(String.valueOf(specimenData.getCellNumberX()));
         cellNumberZTextField.setText(String.valueOf(specimenData.getCellNumberZ()));
+        cellSizeTextField.setText(String.valueOf(specimenData.getCellSize()));
 
-        List<String> initialConditionsNames = new ArrayList<>();
-        for (InitialCondition condition : DataBaseUtils.getAllInitialConditions(specimenData.getSpecimenName())){
-            initialConditionsNames.add(condition.getName());
+        if (specimenData.getTypeOfGrainDistribution() == Common.FIXED_GRAINS_DISTRIB)
+            fixedRadioButton.setSelected(true);
+        else
+            stochasticRadioButton.setSelected(true);
+
+        materialsComboBox.getSelectionModel().select(specimenData.getMaterial());
+
+        DataBaseUtils.initialConditionDataBase.setSpecimenName(specimenData.getSpecimenName());
+        for (InitialCondition condition : DataBaseUtils.initialConditionDataBase.getAllInitialConditions()){
+            initialConditionsComboBox.getItems().add(condition.getName());
         }
-        initialConditionsComboBox.getItems().addAll(initialConditionsNames);
 
-        boundaryConditionsComboBox.getItems().addAll(DataBaseUtils.getAllBoundaryConditionNames(specimenData.getSpecimenName()));
-        tasksComboBox.getItems().addAll(DataBaseUtils.getAllTasks(specimenData.getSpecimenName()));
+        DataBaseUtils.boundaryConditionDataBase.setSpecimenName(specimenData.getSpecimenName());
+        List<BoundaryCondition> boundaryConditions = DataBaseUtils.boundaryConditionDataBase.getBoundaryConditions();
+        List<String> boundaryConditionNames = new ArrayList<>();
+        for (BoundaryCondition boundaryCondition : boundaryConditions){
+            boundaryConditionNames.add(boundaryCondition.getName());
+        }
+        boundaryConditionsComboBox.getItems().addAll(boundaryConditionNames.stream().distinct().collect(Collectors.toList()));
+
+        DataBaseUtils.taskDataBase.setSpecimenName(specimenData.getSpecimenName());
+        for (Task task : DataBaseUtils.taskDataBase.getAllTasks()){
+            tasksComboBox.getItems().add(task.getName());
+        }
 
         initialConditionsComboBox.getSelectionModel().select(specimenData.getInitialConditions());
         boundaryConditionsComboBox.getSelectionModel().select(specimenData.getBoundaryConditions());
@@ -88,13 +110,23 @@ public class SpecimenDataEditor extends Stage {
         cellNumberZTextField = new TextField();
         cellNumberZTextField.setText("0");
 
+        stochasticRadioButton = new RadioButton();
+        stochasticRadioButton.setText(UICommon.STOCHASTIC);
+        fixedRadioButton = new RadioButton();
+        fixedRadioButton.setText(UICommon.FIXED);
+
+        structureTypeToggleGroup = new ToggleGroup();
+        structureTypeToggleGroup.getToggles().addAll(stochasticRadioButton, fixedRadioButton);
+
+        cellSizeTextField = new TextField("0.0");
+
         okButton = new Button("OK");
         cancelButton = new Button("Cancel");
 
         materialsComboBox = new ComboBox();
         materialsComboBox.getItems().add(UICommon.CREATE_NEW);
 
-        List<MaterialData> materialData = DataBaseUtils.getAllMaterials();
+        List<MaterialData> materialData = DataBaseUtils.materialDataBase.getAllMaterials();
         for(MaterialData item : materialData){
             materialsComboBox.getItems().add(item.getMaterialName());
         }
@@ -112,17 +144,33 @@ public class SpecimenDataEditor extends Stage {
         editMaterial.setPadding(new Insets(5, 15, 5, 15));
         editMaterial.setDisable(true);
 
+        deleteMaterial = new Button(UICommon.DELETE);
+        deleteMaterial.setPadding(new Insets(5, 15, 5, 15));
+        deleteMaterial.setDisable(true);
+
         editInitCond = new Button(UICommon.EDIT);
         editInitCond.setPadding(new Insets(5, 15, 5, 15));
         editInitCond.setDisable(true);
+
+        deleteInitCond = new Button(UICommon.DELETE);
+        deleteInitCond.setPadding(new Insets(5, 15, 5, 15));
+        deleteInitCond.setDisable(true);
 
         editBoundCond = new Button(UICommon.EDIT);
         editBoundCond.setPadding(new Insets(5, 15, 5, 15));
         editBoundCond.setDisable(true);
 
+        deleteBoundCond = new Button(UICommon.DELETE);
+        deleteBoundCond.setPadding(new Insets(5, 15, 5, 15));
+        deleteBoundCond.setDisable(true);
+
         editTask = new Button(UICommon.EDIT);
         editTask.setPadding(new Insets(5, 15, 5, 15));
         editTask.setDisable(true);
+
+        deleteTask = new Button(UICommon.DELETE);
+        deleteTask.setPadding(new Insets(5, 15, 5, 15));
+        deleteTask.setDisable(true);
     }
 
     private void addAllComponents(){
@@ -132,16 +180,17 @@ public class SpecimenDataEditor extends Stage {
         centralLayout.setVgap(10.0);
         centralLayout.setAlignment(Pos.CENTER);
 
-        Label l1 = new Label("Specimen Name:");
-        Label l2 = new Label("Cell Number X");
-        Label l3 = new Label("Cell Number Y");
-        Label l4 = new Label("Cell Number Z");
-        Label l5 = new Label("Number of Grains:");
-        Label l6 = new Label("Angle Range:");
-        Label l7 = new Label("Select Material:");
-        Label l8 = new Label("Select Initial Conditions:");
-        Label l9 = new Label("Select Boundary Conditions:");
-        Label l10 = new Label("Select Tasks:");
+        Label l1 = new Label(UICommon.SPECIMEN_NAME);
+        Label l2 = new Label(UICommon.CELL_NUMBER_X);
+        Label l3 = new Label(UICommon.CELL_NUMBER_Y);
+        Label l4 = new Label(UICommon.CELL_NUMBER_Z);
+        Label l11 = new Label(UICommon.CELL_SIZE);
+        Label l5 = new Label(UICommon.NUMBER_OF_GRAINS);
+        Label l6 = new Label(UICommon.ANGLE_RANGE);
+        Label l7 = new Label(UICommon.SELECT_MATERIAL);
+        Label l8 = new Label(UICommon.SELECT_INITIAL_CONDITIONS);
+        Label l9 = new Label(UICommon.SELECT_BOUNDARY_CONDITIONS);
+        Label l10 = new Label(UICommon.SELECT_TASK);
 
         Separator s1 = new Separator();
         Separator s2 = new Separator();
@@ -159,37 +208,49 @@ public class SpecimenDataEditor extends Stage {
         GridPane.setConstraints(l4, 0, 4, 1, 1, HPos.RIGHT, VPos.CENTER);
         GridPane.setConstraints(cellNumberZTextField, 1, 4, 1, 1, HPos.CENTER, VPos.CENTER);
 
-        GridPane.setConstraints(s2, 0, 5, 2,1,HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(l11, 0, 5, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(cellSizeTextField, 1, 5, 1, 1, HPos.CENTER, VPos.CENTER);
 
-        GridPane.setConstraints(l5, 0, 6, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(numberOfGrainsTextField, 1, 6, 1, 1, HPos.CENTER, VPos.CENTER);
-        GridPane.setConstraints(l6, 0, 7, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(angleRangeTextField, 1, 7, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(s2, 0, 6, 2,1,HPos.CENTER, VPos.CENTER);
 
-        GridPane.setConstraints(s3, 0, 8, 2, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(l5, 0, 7, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(numberOfGrainsTextField, 1, 7, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(l6, 0, 8, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(angleRangeTextField, 1, 8, 1, 1, HPos.CENTER, VPos.CENTER);
 
-        GridPane.setConstraints(l7, 0, 9, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(materialsComboBox, 1, 9, 1, 1, HPos.CENTER, VPos.CENTER);
-        GridPane.setConstraints(editMaterial, 2, 9, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(stochasticRadioButton, 0, 9, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(fixedRadioButton, 1, 9, 1, 1, HPos.CENTER, VPos.CENTER);
 
-        GridPane.setConstraints(l8, 0, 10, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(initialConditionsComboBox, 1, 10, 1, 1, HPos.CENTER, VPos.CENTER);
-        GridPane.setConstraints(editInitCond, 2, 10, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(s3, 0, 10, 2, 1, HPos.CENTER, VPos.CENTER);
 
-        GridPane.setConstraints(l9, 0, 11, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(boundaryConditionsComboBox, 1, 11, 1, 1, HPos.CENTER, VPos.CENTER);
-        GridPane.setConstraints(editBoundCond, 2, 11, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(l7, 0, 11, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(materialsComboBox, 1, 11, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(editMaterial, 2, 11, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(deleteMaterial, 3, 11, 1, 1, HPos.LEFT, VPos.CENTER);
 
-        GridPane.setConstraints(l10, 0, 12, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(tasksComboBox, 1, 12, 1, 1, HPos.CENTER, VPos.CENTER);
-        GridPane.setConstraints(editTask, 2, 12, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(l8, 0, 12, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(initialConditionsComboBox, 1, 12, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(editInitCond, 2, 12, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(deleteInitCond, 3, 12, 1, 1, HPos.LEFT, VPos.CENTER);
+
+        GridPane.setConstraints(l9, 0, 13, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(boundaryConditionsComboBox, 1, 13, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(editBoundCond, 2, 13, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(deleteBoundCond, 3, 13, 1, 1, HPos.LEFT, VPos.CENTER);
+
+        GridPane.setConstraints(l10, 0, 14, 1, 1, HPos.RIGHT, VPos.CENTER);
+        GridPane.setConstraints(tasksComboBox, 1, 14, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(editTask, 2, 14, 1, 1, HPos.LEFT, VPos.CENTER);
+        GridPane.setConstraints(deleteTask, 3, 14, 1, 1, HPos.LEFT, VPos.CENTER);
 
         centralLayout.getChildren().addAll(
             l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, s1, s2, s3,
             specimenNameTextField, cellNumberXTextField, cellNumberYTextField, cellNumberZTextField,
             numberOfGrainsTextField, angleRangeTextField, materialsComboBox,
             initialConditionsComboBox, boundaryConditionsComboBox, tasksComboBox,
-            editMaterial, editInitCond, editBoundCond, editTask
+            editMaterial, editInitCond, editBoundCond, editTask, cellSizeTextField, l11,
+            deleteMaterial, deleteInitCond, deleteBoundCond, deleteTask,
+            stochasticRadioButton, fixedRadioButton
         );
         this.root.setCenter(centralLayout);
 
@@ -206,25 +267,40 @@ public class SpecimenDataEditor extends Stage {
         this.root.setBottom(bottomLayout);
     }
 
-    public void handleOKButton(List<SpecimenData> list){
+    public void handleOKButton(TableView<SpecimenData> tableView, boolean editing, SpecimenData oldSpecimenData){
         okButton.setOnAction(e -> {
             try{
                 String specimenName = specimenNameTextField.getText();
                 int cellNumberX = Integer.parseInt(cellNumberXTextField.getText());
                 int cellNumberY = Integer.parseInt(cellNumberYTextField.getText());
                 int cellNumberZ = Integer.parseInt(cellNumberZTextField.getText());
+                double cellSize = Double.parseDouble(cellSizeTextField.getText());
                 int numberOfGrains = Integer.parseInt(numberOfGrainsTextField.getText());
                 double angleRange = Double.parseDouble(angleRangeTextField.getText());
+
+                byte typeOfGrainStructure = 0;
+                if (this.stochasticRadioButton.isSelected())
+                    typeOfGrainStructure = 1;
+
                 String material = materialsComboBox.getSelectionModel().getSelectedItem().toString();
                 String initialCondition = initialConditionsComboBox.getSelectionModel().getSelectedItem().toString();
                 String boundaryCondition = boundaryConditionsComboBox.getSelectionModel().getSelectedItem().toString();
                 String task = tasksComboBox.getSelectionModel().getSelectedItem().toString();
 
                 SpecimenData specimenData = new SpecimenData(specimenName, cellNumberX, cellNumberY, cellNumberZ,
-                        numberOfGrains, angleRange, material, initialCondition,
+                        cellSize, numberOfGrains, angleRange, typeOfGrainStructure,
+                        material, initialCondition,
                         boundaryCondition, task);
-                list.add(specimenData);
-                DataBaseUtils.addSpecimen(specimenData);
+
+                if (editing){
+                    tableView.getItems().remove(oldSpecimenData);
+                    DataBaseUtils.specimenDataBase.updateSpecimen(specimenData, oldSpecimenData.getSpecimenName());
+                    tableView.getItems().add(specimenData);
+                }
+                else {
+                    DataBaseUtils.specimenDataBase.addNewSpecimen(specimenData);
+                    tableView.getItems().add(specimenData);
+                }
             }
             catch (Exception ex){
                 System.out.println(ex.getMessage());
@@ -237,10 +313,11 @@ public class SpecimenDataEditor extends Stage {
         materialsComboBox.getSelectionModel().selectedItemProperty().addListener((ov, oldValue, newValue)-> {
             if(UICommon.CREATE_NEW.equals(newValue.toString())){
                 MaterialDataEditor materialDataEditor = new MaterialDataEditor();
-                materialDataEditor.handleOKButton(materialsComboBox);
+                materialDataEditor.handleOKButton(materialsComboBox, false, new MaterialData());
             }
             else{
                 editMaterial.setDisable(false);
+                deleteMaterial.setDisable(false);
             }
         });
 
@@ -248,10 +325,11 @@ public class SpecimenDataEditor extends Stage {
             if(UICommon.CREATE_NEW.equals(newValue.toString())){
                 if(!specimenNameTextField.getText().isEmpty()){
                     String specimenName = specimenNameTextField.getText();
-                    DataBaseUtils.createInitialConditionTable(specimenName);
+                    DataBaseUtils.initialConditionDataBase.setSpecimenName(specimenName);
+                    DataBaseUtils.initialConditionDataBase.createInitialConditionsTable();
 
                     InitialConditionDataEditor initialConditionDataEditor = new InitialConditionDataEditor();
-                    initialConditionDataEditor.handleOKButton(specimenName, initialConditionsComboBox);
+                    initialConditionDataEditor.handleOKButton(specimenName, initialConditionsComboBox, false, new InitialCondition());
                 }
                 else{
                     new Alert(Alert.AlertType.ERROR, "Input Specimen Name First").show();
@@ -260,17 +338,20 @@ public class SpecimenDataEditor extends Stage {
             }
             else {
                 editInitCond.setDisable(false);
+                deleteInitCond.setDisable(false);
             }
         });
 
         boundaryConditionsComboBox.getSelectionModel().selectedItemProperty().addListener((ov, oldValue, newValue)-> {
-            if(UICommon.CREATE_NEW.equals(newValue.toString())){
+            if(UICommon.CREATE_NEW.equals(newValue)){
                 if(!specimenNameTextField.getText().isEmpty()){
                     String specimenName = specimenNameTextField.getText();
-                    DataBaseUtils.createBoundaryConditionTable(specimenName);
+
+                    DataBaseUtils.boundaryConditionDataBase.setSpecimenName(specimenName);
+                    DataBaseUtils.boundaryConditionDataBase.createBoundaryConditionsTable();
 
                     BoundaryConditionDataEditor materialDataEditor = new BoundaryConditionDataEditor();
-                    materialDataEditor.handleOKButton(specimenName, boundaryConditionsComboBox);
+                    materialDataEditor.handleOKButton(specimenName, boundaryConditionsComboBox, false, null);
                 }
                 else{
                     new Alert(Alert.AlertType.ERROR, "Input Specimen Name First").show();
@@ -279,17 +360,20 @@ public class SpecimenDataEditor extends Stage {
             }
             else {
                 editBoundCond.setDisable(false);
+                deleteBoundCond.setDisable(false);
             }
         });
 
         tasksComboBox.getSelectionModel().selectedItemProperty().addListener((ov, oldValue, newValue)-> {
-            if(UICommon.CREATE_NEW.equals(newValue.toString())){
+            if(UICommon.CREATE_NEW.equals(newValue)){
                 if(!specimenNameTextField.getText().isEmpty()){
                     String specimenName = specimenNameTextField.getText();
-                    DataBaseUtils.createTaskTable(specimenName);
+
+                    DataBaseUtils.taskDataBase.setSpecimenName(specimenName);
+                    DataBaseUtils.taskDataBase.createTasksTable();
 
                     TaskDataEditor taskDataEditor = new TaskDataEditor();
-                    taskDataEditor.handleOKButton(specimenName, tasksComboBox);
+                    taskDataEditor.handleOKButton(specimenName, tasksComboBox, false, null);
                 }
                 else{
                     new Alert(Alert.AlertType.ERROR, "Input Specimen Name First").show();
@@ -298,39 +382,85 @@ public class SpecimenDataEditor extends Stage {
             }
             else {
                 editTask.setDisable(false);
+                deleteTask.setDisable(false);
             }
         });
 
         editMaterial.setOnAction(e -> {
             System.out.println("Action Event : Edit Material Button is pushed");
-            String selectedMaterial = materialsComboBox.getSelectionModel().getSelectedItem().toString();
-            MaterialDataEditor materialDataEditor = new MaterialDataEditor(DataBaseUtils.getMaterial(selectedMaterial));
+            String selectedMaterial = materialsComboBox.getSelectionModel().getSelectedItem();
+            MaterialData materialData = DataBaseUtils.materialDataBase.getMaterial(selectedMaterial);
+            MaterialDataEditor materialDataEditor = new MaterialDataEditor(materialData);
+            materialDataEditor.handleOKButton(materialsComboBox, true, materialData);
+        });
+
+        deleteMaterial.setOnAction(e -> {
+            System.out.println("Action Event : Delete Material Button is pushed");
+            String selectedMaterial = materialsComboBox.getSelectionModel().getSelectedItem();
+            if (UICommon.confirmation()){
+                DataBaseUtils.materialDataBase.deleteMaterial(selectedMaterial);
+                materialsComboBox.getItems().remove(selectedMaterial);
+            }
         });
 
         editInitCond.setOnAction(e -> {
             System.out.println("Action Event : Edit Initial Condition Button is pushed");
-            String selectedItem = initialConditionsComboBox.getSelectionModel().getSelectedItem().toString();
+            String initCondName = initialConditionsComboBox.getSelectionModel().getSelectedItem();
             String specimenName = specimenNameTextField.getText();
-            InitialCondition initialCondition = DataBaseUtils.getInitialCondition(specimenName, selectedItem);
+            InitialCondition initialCondition = DataBaseUtils.initialConditionDataBase.getInitialCondition(initCondName);
             InitialConditionDataEditor initialConditionDataEditor = new InitialConditionDataEditor(initialCondition);
-            initialConditionDataEditor.handleOKButton(specimenName, initialConditionsComboBox);
+            initialConditionDataEditor.handleOKButton(specimenName, initialConditionsComboBox, true, initialCondition);
+        });
+
+        deleteInitCond.setOnAction(e -> {
+            System.out.println("Action Event : Delete Initial Condition Button is pushed");
+            String initCondName = initialConditionsComboBox.getSelectionModel().getSelectedItem();
+            if (UICommon.confirmation()){
+                DataBaseUtils.initialConditionDataBase.deleteInitialCondition(initCondName);
+                initialConditionsComboBox.getItems().remove(initCondName);
+                initialConditionsComboBox.getSelectionModel().selectPrevious();
+            }
         });
 
         editBoundCond.setOnAction(e -> {
             System.out.println("Action Event : Edit Boundary Condition Button is pushed");
-            String selectedItem = boundaryConditionsComboBox.getSelectionModel().getSelectedItem().toString();
-            BoundaryConditionDataEditor boundaryConditionDataEditor = new BoundaryConditionDataEditor();
+            String boundCondName = boundaryConditionsComboBox.getSelectionModel().getSelectedItem();
+            String specimenName = specimenNameTextField.getText();
+            List<BoundaryCondition> boundaryCondition = DataBaseUtils.boundaryConditionDataBase.getBoundaryCondition(boundCondName);
+            BoundaryConditionDataEditor boundaryConditionDataEditor = new BoundaryConditionDataEditor(boundaryCondition);
+            boundaryConditionDataEditor.handleOKButton(specimenName, boundaryConditionsComboBox, true, boundCondName);
+        });
+
+        deleteBoundCond.setOnAction(e -> {
+            System.out.println("Action Event : Delete Boundary Condition is pushed");
+            String boundCondName = boundaryConditionsComboBox.getSelectionModel().getSelectedItem();
+            if (UICommon.confirmation()){
+                DataBaseUtils.boundaryConditionDataBase.deleteBoundaryCondition(boundCondName);
+                boundaryConditionsComboBox.getItems().remove(boundCondName);
+            }
         });
 
         editTask.setOnAction(e -> {
             System.out.println("Action Event : Edit Task Button is pushed");
-            String selectedItem = tasksComboBox.getSelectionModel().getSelectedItem().toString();
-            TaskDataEditor taskDataEditor = new TaskDataEditor();
+            String taskName = tasksComboBox.getSelectionModel().getSelectedItem();
+            String specimenName = specimenNameTextField.getText();
+            Task task = DataBaseUtils.taskDataBase.getTask(taskName);
+            TaskDataEditor taskDataEditor = new TaskDataEditor(task);
+            taskDataEditor.handleOKButton(specimenName, tasksComboBox, true, taskName);
+        });
+
+        deleteTask.setOnAction(e -> {
+            System.out.println("Action Event : Delete Task Button is pushed");
+            String taskName = tasksComboBox.getSelectionModel().getSelectedItem();
+            if (UICommon.confirmation()){
+                DataBaseUtils.taskDataBase.deleteTask(taskName);
+                tasksComboBox.getItems().remove(taskName);
+            }
         });
 
         cancelButton.setOnAction(e -> {
             this.close();
         });
-
     }
+
 }

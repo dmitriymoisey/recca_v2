@@ -17,6 +17,7 @@ import javafx.util.converter.DoubleStringConverter;
 import utils.BoundaryCondition;
 
 import javax.script.Bindings;
+import java.util.List;
 
 public class BoundaryConditionDataEditor extends Stage {
 
@@ -94,10 +95,25 @@ public class BoundaryConditionDataEditor extends Stage {
         this.show();
     }
 
-    public BoundaryConditionDataEditor(BoundaryCondition boundaryCondition){
+    public BoundaryConditionDataEditor(List<BoundaryCondition> boundaryConditions){
+        initAllValues();
         initAllComponents();
         addAllComponents();
         handleEvents();
+
+        if (!boundaryConditions.isEmpty()){
+            String boundCondName = boundaryConditions.get(0).getName();
+            this.nameTextField.setText(boundCondName);
+            this.facetsComboBox.setDisable(false);
+            for (BoundaryCondition condition : boundaryConditions){
+                this.setBoundaryConditionData(condition);
+            }
+        }
+
+
+
+        this.setTitle("Boundary Condition - Editor");
+        this.show();
     }
 
     private void initAllValues(){
@@ -380,27 +396,27 @@ public class BoundaryConditionDataEditor extends Stage {
     private TabPane initTabPane(){
         TabPane tabPane = new TabPane();
 
-        Tab temperatureTab = new Tab("Temperature");
+        Tab temperatureTab = new Tab(UICommon.TEMPERATURE);
         temperatureTab.setClosable(false);
         temperatureTab.setContent(getTemperatureTabContent());
 
-        Tab elasticEnergyTab = new Tab("Elastic Energy");
+        Tab elasticEnergyTab = new Tab(UICommon.ELASTIC_ENERGY);
         elasticEnergyTab.setClosable(false);
         elasticEnergyTab.setContent(getElasticEnergyTabContent());
 
-        Tab dislocationDensityTab = new Tab("Dislocation Density");
+        Tab dislocationDensityTab = new Tab(UICommon.DISLOCATION_DENSITY);
         dislocationDensityTab.setClosable(false);
         dislocationDensityTab.setContent(getDislocationDensityTabContent());
 
-        Tab momentXTab = new Tab("Moment X");
+        Tab momentXTab = new Tab(UICommon.MOMENTS_X);
         momentXTab.setClosable(false);
         momentXTab.setContent(getMomentXTabContent());
 
-        Tab momentYTab = new Tab("Moment Y");
+        Tab momentYTab = new Tab(UICommon.MOMENTS_Y);
         momentYTab.setClosable(false);
         momentYTab.setContent(getMomentYTabContent());
 
-        Tab momentZTab = new Tab("Moment Z");
+        Tab momentZTab = new Tab(UICommon.MOMENTS_Z);
         momentZTab.setClosable(false);
         momentZTab.setContent(getMomentZTabContent());
 
@@ -415,10 +431,10 @@ public class BoundaryConditionDataEditor extends Stage {
         topFacetCheckBox.setOnAction(e -> {
             if(topFacetCheckBox.isSelected()){
                 facetsComboBox.setDisable(false);
-                facetsComboBox.getItems().add("Top");
+                facetsComboBox.getItems().add(UICommon.TOP);
             }
             else{
-                facetsComboBox.getItems().remove("Top");
+                facetsComboBox.getItems().remove(UICommon.TOP);
                 if(facetsComboBox.getItems().isEmpty()){
                     facetsComboBox.setDisable(true);
                 }
@@ -428,10 +444,10 @@ public class BoundaryConditionDataEditor extends Stage {
         bottomFacetCheckBox.setOnAction(e -> {
             if(bottomFacetCheckBox.isSelected()){
                 facetsComboBox.setDisable(false);
-                facetsComboBox.getItems().add("Bottom");
+                facetsComboBox.getItems().add(UICommon.BOTTOM);
             }
             else{
-                facetsComboBox.getItems().remove("Bottom");
+                facetsComboBox.getItems().remove(UICommon.BOTTOM);
                 if(facetsComboBox.getItems().isEmpty()){
                     facetsComboBox.setDisable(true);
                 }
@@ -441,10 +457,10 @@ public class BoundaryConditionDataEditor extends Stage {
         leftFacetCheckBox.setOnAction(e -> {
             if(leftFacetCheckBox.isSelected()){
                 facetsComboBox.setDisable(false);
-                facetsComboBox.getItems().add("Left");
+                facetsComboBox.getItems().add(UICommon.LEFT);
             }
             else{
-                facetsComboBox.getItems().remove("Left");
+                facetsComboBox.getItems().remove(UICommon.LEFT);
                 if(facetsComboBox.getItems().isEmpty()){
                     facetsComboBox.setDisable(true);
                 }
@@ -454,10 +470,10 @@ public class BoundaryConditionDataEditor extends Stage {
         rightFacetCheckBox.setOnAction(e -> {
             if(rightFacetCheckBox.isSelected()){
                 facetsComboBox.setDisable(false);
-                facetsComboBox.getItems().add("Right");
+                facetsComboBox.getItems().add(UICommon.RIGHT);
             }
             else{
-                facetsComboBox.getItems().remove("Right");
+                facetsComboBox.getItems().remove(UICommon.RIGHT);
                 if(facetsComboBox.getItems().isEmpty()){
                     facetsComboBox.setDisable(true);
                 }
@@ -467,10 +483,10 @@ public class BoundaryConditionDataEditor extends Stage {
         frontFacetCheckBox.setOnAction(e -> {
             if(frontFacetCheckBox.isSelected()){
                 facetsComboBox.setDisable(false);
-                facetsComboBox.getItems().add("Front");
+                facetsComboBox.getItems().add(UICommon.FRONT);
             }
             else{
-                facetsComboBox.getItems().remove("Front");
+                facetsComboBox.getItems().remove(UICommon.FRONT);
                 if(facetsComboBox.getItems().isEmpty()){
                     facetsComboBox.setDisable(true);
                 }
@@ -480,10 +496,10 @@ public class BoundaryConditionDataEditor extends Stage {
         backFacetCheckBox.setOnAction(e -> {
             if(backFacetCheckBox.isSelected()){
                 facetsComboBox.setDisable(false);
-                facetsComboBox.getItems().add("Back");
+                facetsComboBox.getItems().add(UICommon.BACK);
             }
             else{
-                facetsComboBox.getItems().remove("Back");
+                facetsComboBox.getItems().remove(UICommon.BACK);
                 if(facetsComboBox.getItems().isEmpty()){
                     facetsComboBox.setDisable(true);
                 }
@@ -493,27 +509,27 @@ public class BoundaryConditionDataEditor extends Stage {
         facetsComboBox.getSelectionModel().selectedItemProperty().addListener((ov, oldValue, newValue)->{
             String selectedFacet = String.valueOf(newValue);
             switch (selectedFacet){
-                case "Top":
+                case UICommon.TOP:
                     unbindAllValues();
                     setTopFacetValues();
                     break;
-                case "Bottom":
+                case UICommon.BOTTOM:
                     unbindAllValues();
                     setBottomFacetValues();
                     break;
-                case "Left":
+                case UICommon.LEFT:
                     unbindAllValues();
                     setLeftFacetValues();
                     break;
-                case "Right":
+                case UICommon.RIGHT:
                     unbindAllValues();
                     setRightFacetValues();
                     break;
-                case "Front":
+                case UICommon.FRONT:
                     unbindAllValues();
                     setFrontFacetValues();
                     break;
-                case "Back":
+                case UICommon.BACK:
                     unbindAllValues();
                     setBackFacetValues();
                     break;
@@ -741,7 +757,7 @@ public class BoundaryConditionDataEditor extends Stage {
         return gridPane;
     }
 
-    public void handleOKButton(String specimenName, ComboBox comboBox){
+    public void handleOKButton(String specimenName, ComboBox comboBox, boolean editing, String boundCondName){
         okButton.setOnAction(e -> {
             System.out.println("Action Event: ok button is pushed");
 
@@ -749,7 +765,7 @@ public class BoundaryConditionDataEditor extends Stage {
 
             if (topFacetCheckBox.isSelected()){
 
-                String facet = "Top";
+                String facet = UICommon.TOP;
 
                 double averageTemperature = topAverageTemperatureValue.get();
                 double temperatureDeviation = topTemperatureDeviationValue.get();
@@ -779,11 +795,16 @@ public class BoundaryConditionDataEditor extends Stage {
                         averageMomentY, momentYDeviation, momentYLoadTime,
                         averageMomentZ, momentZDeviation, momentZLoadTime);
 
-                DataBaseUtils.addNewBoundaryConditionName(specimenName, conditionName, topBoundaryCondition);
+                if (editing){
+                    DataBaseUtils.boundaryConditionDataBase.updateBoundaryCondition(topBoundaryCondition, boundCondName);
+                }
+                else {
+                    DataBaseUtils.boundaryConditionDataBase.addBoundaryCondition(topBoundaryCondition);
+                }
             }
 
             if (bottomFacetCheckBox.isSelected()){
-                String facet = "Bottom";
+                String facet = UICommon.BOTTOM;
 
                 double averageTemperature = bottomAverageTemperatureValue.get();
                 double temperatureDeviation = bottomTemperatureDeviationValue.get();
@@ -804,7 +825,7 @@ public class BoundaryConditionDataEditor extends Stage {
                 double momentZDeviation = bottomZMomentDeviationValue.get();
                 double momentZLoadTime = bottomZMomentLoadTimeValue.get();
 
-                BoundaryCondition topBoundaryCondition = new BoundaryCondition(
+                BoundaryCondition bottomBoundaryCondition = new BoundaryCondition(
                         conditionName, facet,
                         averageTemperature, temperatureDeviation, temperatureLoadTime,
                         averageElasticEnergy, elasticEnergryDeviation, elasticEnergyLoadTime,
@@ -813,11 +834,16 @@ public class BoundaryConditionDataEditor extends Stage {
                         averageMomentY, momentYDeviation, momentYLoadTime,
                         averageMomentZ, momentZDeviation, momentZLoadTime);
 
-                DataBaseUtils.addNewBoundaryConditionName(specimenName, conditionName, topBoundaryCondition);
+                if (editing){
+                    DataBaseUtils.boundaryConditionDataBase.updateBoundaryCondition(bottomBoundaryCondition, boundCondName);
+                }
+                else {
+                    DataBaseUtils.boundaryConditionDataBase.addBoundaryCondition(bottomBoundaryCondition);
+                }
             }
 
             if (leftFacetCheckBox.isSelected()){
-                String facet = "Left";
+                String facet = UICommon.LEFT;
 
                 double averageTemperature = leftAverageTemperatureValue.get();
                 double temperatureDeviation = leftTemperatureDeviationValue.get();
@@ -838,7 +864,7 @@ public class BoundaryConditionDataEditor extends Stage {
                 double momentZDeviation = leftZMomentDeviationValue.get();
                 double momentZLoadTime = leftZMomentLoadTimeValue.get();
 
-                BoundaryCondition topBoundaryCondition = new BoundaryCondition(
+                BoundaryCondition leftBoundaryCondition = new BoundaryCondition(
                         conditionName, facet,
                         averageTemperature, temperatureDeviation, temperatureLoadTime,
                         averageElasticEnergy, elasticEnergryDeviation, elasticEnergyLoadTime,
@@ -847,11 +873,14 @@ public class BoundaryConditionDataEditor extends Stage {
                         averageMomentY, momentYDeviation, momentYLoadTime,
                         averageMomentZ, momentZDeviation, momentZLoadTime);
 
-                DataBaseUtils.addNewBoundaryConditionName(specimenName, conditionName, topBoundaryCondition);
+                if (editing)
+                    DataBaseUtils.boundaryConditionDataBase.updateBoundaryCondition(leftBoundaryCondition, boundCondName);
+                else
+                    DataBaseUtils.boundaryConditionDataBase.addBoundaryCondition(leftBoundaryCondition);
             }
 
             if (rightFacetCheckBox.isSelected()){
-                String facet = "Right";
+                String facet = UICommon.RIGHT;
 
                 double averageTemperature = rightAverageTemperatureValue.get();
                 double temperatureDeviation = rightTemperatureDeviationValue.get();
@@ -872,7 +901,7 @@ public class BoundaryConditionDataEditor extends Stage {
                 double momentZDeviation = rightZMomentDeviationValue.get();
                 double momentZLoadTime = rightZMomentLoadTimeValue.get();
 
-                BoundaryCondition topBoundaryCondition = new BoundaryCondition(
+                BoundaryCondition rightBoundaryCondition = new BoundaryCondition(
                         conditionName, facet,
                         averageTemperature, temperatureDeviation, temperatureLoadTime,
                         averageElasticEnergy, elasticEnergryDeviation, elasticEnergyLoadTime,
@@ -881,11 +910,14 @@ public class BoundaryConditionDataEditor extends Stage {
                         averageMomentY, momentYDeviation, momentYLoadTime,
                         averageMomentZ, momentZDeviation, momentZLoadTime);
 
-                DataBaseUtils.addNewBoundaryConditionName(specimenName, conditionName, topBoundaryCondition);
+                if (editing)
+                    DataBaseUtils.boundaryConditionDataBase.updateBoundaryCondition(rightBoundaryCondition, boundCondName);
+                else
+                    DataBaseUtils.boundaryConditionDataBase.addBoundaryCondition(rightBoundaryCondition);
             }
 
             if (frontFacetCheckBox.isSelected()){
-                String facet = "Front";
+                String facet = UICommon.FRONT;
 
                 double averageTemperature = frontAverageTemperatureValue.get();
                 double temperatureDeviation = frontTemperatureDeviationValue.get();
@@ -906,7 +938,7 @@ public class BoundaryConditionDataEditor extends Stage {
                 double momentZDeviation = frontZMomentDeviationValue.get();
                 double momentZLoadTime = frontZMomentLoadTimeValue.get();
 
-                BoundaryCondition topBoundaryCondition = new BoundaryCondition(
+                BoundaryCondition frontBoundaryCondition = new BoundaryCondition(
                         conditionName, facet,
                         averageTemperature, temperatureDeviation, temperatureLoadTime,
                         averageElasticEnergy, elasticEnergryDeviation, elasticEnergyLoadTime,
@@ -915,11 +947,14 @@ public class BoundaryConditionDataEditor extends Stage {
                         averageMomentY, momentYDeviation, momentYLoadTime,
                         averageMomentZ, momentZDeviation, momentZLoadTime);
 
-                DataBaseUtils.addNewBoundaryConditionName(specimenName, conditionName, topBoundaryCondition);
+                if (editing)
+                    DataBaseUtils.boundaryConditionDataBase.updateBoundaryCondition(frontBoundaryCondition, boundCondName);
+                else
+                    DataBaseUtils.boundaryConditionDataBase.addBoundaryCondition(frontBoundaryCondition);
             }
 
             if (backFacetCheckBox.isSelected()){
-                String facet = "Back";
+                String facet = UICommon.BACK;
 
                 double averageTemperature = backAverageTemperatureValue.get();
                 double temperatureDeviation = backTemperatureDeviationValue.get();
@@ -940,7 +975,7 @@ public class BoundaryConditionDataEditor extends Stage {
                 double momentZDeviation = backZMomentDeviationValue.get();
                 double momentZLoadTime = backZMomentLoadTimeValue.get();
 
-                BoundaryCondition topBoundaryCondition = new BoundaryCondition(
+                BoundaryCondition backBoundaryCondition = new BoundaryCondition(
                         conditionName, facet,
                         averageTemperature, temperatureDeviation, temperatureLoadTime,
                         averageElasticEnergy, elasticEnergryDeviation, elasticEnergyLoadTime,
@@ -949,7 +984,10 @@ public class BoundaryConditionDataEditor extends Stage {
                         averageMomentY, momentYDeviation, momentYLoadTime,
                         averageMomentZ, momentZDeviation, momentZLoadTime);
 
-                DataBaseUtils.addNewBoundaryConditionName(specimenName, conditionName, topBoundaryCondition);
+                if (editing)
+                    DataBaseUtils.boundaryConditionDataBase.updateBoundaryCondition(backBoundaryCondition, boundCondName);
+                else
+                    DataBaseUtils.boundaryConditionDataBase.addBoundaryCondition(backBoundaryCondition);
             }
             comboBox.getItems().add(conditionName);
             comboBox.getSelectionModel().select(conditionName);
@@ -1276,4 +1314,183 @@ public class BoundaryConditionDataEditor extends Stage {
         zMomentDeviationTextField.textProperty().bindBidirectional(backZMomentDeviationValue,stringConverter);
         zMomentLoadTimeTextField.textProperty().bindBidirectional(backZMomentLoadTimeValue,stringConverter);
     }
+
+    private void setBoundaryConditionData(BoundaryCondition boundaryCondition){
+
+        switch (boundaryCondition.getFacet()){
+            case "Top":
+                topAverageTemperatureValue.set(boundaryCondition.getAverageTemperature());
+                topTemperatureDeviationValue.set(boundaryCondition.getTemperatureRange());
+                topTemperatureLoadTimeValue.set(boundaryCondition.getTemperatureLoadingTimePortion());
+
+                topAverageElasticEnergyValue.set(boundaryCondition.getAverageElasticEnergy());
+                topElasticEnergyDeviationValue.set(boundaryCondition.getElasticEnergyRange());
+                topElasticEnergyLoadTimeValue.set(boundaryCondition.getElasticEnergyLoadingTimePortion());
+
+                topAverageDislocationDensityValue.set(boundaryCondition.getAverageDislocationDensity());
+                topDislocationDensityDeviationValue.set(boundaryCondition.getDislocationDensityRange());
+                topDislocationDensityLoadTimeValue.set(boundaryCondition.getDislocationDensityLoadingTimePortion());
+
+                topAverageXMomentValue.set(boundaryCondition.getAverageMomentX());
+                topXMomentDeviationValue.set(boundaryCondition.getMomentRangeX());
+                topXMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionX());
+
+                topAverageYMomentValue.set(boundaryCondition.getAverageMomentY());
+                topYMomentDeviationValue.set(boundaryCondition.getMomentRangeY());
+                topYMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionY());
+
+                topAverageZMomentValue.set(boundaryCondition.getAverageMomentZ());
+                topZMomentDeviationValue.set(boundaryCondition.getMomentRangeZ());
+                topZMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionZ());
+                topFacetCheckBox.setSelected(true);
+                facetsComboBox.getItems().add(UICommon.TOP);
+                break;
+
+            case "Bottom":
+                bottomAverageTemperatureValue.set(boundaryCondition.getAverageTemperature());
+                bottomTemperatureDeviationValue.set(boundaryCondition.getTemperatureRange());
+                bottomTemperatureLoadTimeValue.set(boundaryCondition.getTemperatureLoadingTimePortion());
+
+                bottomAverageElasticEnergyValue.set(boundaryCondition.getAverageElasticEnergy());
+                bottomElasticEnergyDeviationValue.set(boundaryCondition.getElasticEnergyRange());
+                bottomElasticEnergyLoadTimeValue.set(boundaryCondition.getElasticEnergyLoadingTimePortion());
+
+                bottomAverageDislocationDensityValue.set(boundaryCondition.getAverageDislocationDensity());
+                bottomDislocationDensityDeviationValue.set(boundaryCondition.getDislocationDensityRange());
+                bottomDislocationDensityLoadTimeValue.set(boundaryCondition.getDislocationDensityLoadingTimePortion());
+
+                bottomAverageXMomentValue.set(boundaryCondition.getAverageMomentX());
+                bottomXMomentDeviationValue.set(boundaryCondition.getMomentRangeX());
+                bottomXMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionX());
+
+                bottomAverageYMomentValue.set(boundaryCondition.getAverageMomentY());
+                bottomYMomentDeviationValue.set(boundaryCondition.getMomentRangeY());
+                bottomYMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionY());
+
+                bottomAverageZMomentValue.set(boundaryCondition.getAverageMomentZ());
+                bottomZMomentDeviationValue.set(boundaryCondition.getMomentRangeZ());
+                bottomZMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionZ());
+                bottomFacetCheckBox.setSelected(true);
+                facetsComboBox.getItems().add(UICommon.BOTTOM);
+                break;
+
+            case "Left":
+                leftAverageTemperatureValue.set(boundaryCondition.getAverageTemperature());
+                leftTemperatureDeviationValue.set(boundaryCondition.getTemperatureRange());
+                leftTemperatureLoadTimeValue.set(boundaryCondition.getTemperatureLoadingTimePortion());
+
+                leftAverageElasticEnergyValue.set(boundaryCondition.getAverageElasticEnergy());
+                leftElasticEnergyDeviationValue.set(boundaryCondition.getElasticEnergyRange());
+                leftElasticEnergyLoadTimeValue.set(boundaryCondition.getElasticEnergyLoadingTimePortion());
+
+                leftAverageDislocationDensityValue.set(boundaryCondition.getAverageDislocationDensity());
+                leftDislocationDensityDeviationValue.set(boundaryCondition.getDislocationDensityRange());
+                leftDislocationDensityLoadTimeValue.set(boundaryCondition.getDislocationDensityLoadingTimePortion());
+
+                leftAverageXMomentValue.set(boundaryCondition.getAverageMomentX());
+                leftXMomentDeviationValue.set(boundaryCondition.getMomentRangeX());
+                leftXMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionX());
+
+                leftAverageYMomentValue.set(boundaryCondition.getAverageMomentY());
+                leftYMomentDeviationValue.set(boundaryCondition.getMomentRangeY());
+                leftYMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionY());
+
+                leftAverageZMomentValue.set(boundaryCondition.getAverageMomentZ());
+                leftZMomentDeviationValue.set(boundaryCondition.getMomentRangeZ());
+                leftZMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionZ());
+                leftFacetCheckBox.setSelected(true);
+                facetsComboBox.getItems().add(UICommon.LEFT);
+                break;
+
+            case "Right":
+                rightAverageTemperatureValue.set(boundaryCondition.getAverageTemperature());
+                rightTemperatureDeviationValue.set(boundaryCondition.getTemperatureRange());
+                rightTemperatureLoadTimeValue.set(boundaryCondition.getTemperatureLoadingTimePortion());
+
+                rightAverageElasticEnergyValue.set(boundaryCondition.getAverageElasticEnergy());
+                rightElasticEnergyDeviationValue.set(boundaryCondition.getElasticEnergyRange());
+                rightElasticEnergyLoadTimeValue.set(boundaryCondition.getElasticEnergyLoadingTimePortion());
+
+                rightAverageDislocationDensityValue.set(boundaryCondition.getAverageDislocationDensity());
+                rightDislocationDensityDeviationValue.set(boundaryCondition.getDislocationDensityRange());
+                rightDislocationDensityLoadTimeValue.set(boundaryCondition.getDislocationDensityLoadingTimePortion());
+
+                rightAverageXMomentValue.set(boundaryCondition.getAverageMomentX());
+                rightXMomentDeviationValue.set(boundaryCondition.getMomentRangeX());
+                rightXMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionX());
+
+                rightAverageYMomentValue.set(boundaryCondition.getAverageMomentY());
+                rightYMomentDeviationValue.set(boundaryCondition.getMomentRangeY());
+                rightYMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionY());
+
+                rightAverageZMomentValue.set(boundaryCondition.getAverageMomentZ());
+                rightZMomentDeviationValue.set(boundaryCondition.getMomentRangeZ());
+                rightZMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionZ());
+                rightFacetCheckBox.setSelected(true);
+                facetsComboBox.getItems().add(UICommon.RIGHT);
+                break;
+
+            case "Front":
+                frontAverageTemperatureValue.set(boundaryCondition.getAverageTemperature());
+                frontTemperatureDeviationValue.set(boundaryCondition.getTemperatureRange());
+                frontTemperatureLoadTimeValue.set(boundaryCondition.getTemperatureLoadingTimePortion());
+
+                frontAverageElasticEnergyValue.set(boundaryCondition.getAverageElasticEnergy());
+                frontElasticEnergyDeviationValue.set(boundaryCondition.getElasticEnergyRange());
+                frontElasticEnergyLoadTimeValue.set(boundaryCondition.getElasticEnergyLoadingTimePortion());
+
+                frontAverageDislocationDensityValue.set(boundaryCondition.getAverageDislocationDensity());
+                frontDislocationDensityDeviationValue.set(boundaryCondition.getDislocationDensityRange());
+                frontDislocationDensityLoadTimeValue.set(boundaryCondition.getDislocationDensityLoadingTimePortion());
+
+                frontAverageXMomentValue.set(boundaryCondition.getAverageMomentX());
+                frontXMomentDeviationValue.set(boundaryCondition.getMomentRangeX());
+                frontXMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionX());
+
+                frontAverageYMomentValue.set(boundaryCondition.getAverageMomentY());
+                frontYMomentDeviationValue.set(boundaryCondition.getMomentRangeY());
+                frontYMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionY());
+
+                frontAverageZMomentValue.set(boundaryCondition.getAverageMomentZ());
+                frontZMomentDeviationValue.set(boundaryCondition.getMomentRangeZ());
+                frontZMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionZ());
+                frontFacetCheckBox.setSelected(true);
+                facetsComboBox.getItems().add(UICommon.FRONT);
+                break;
+
+            case "Back":
+                backAverageTemperatureValue.set(boundaryCondition.getAverageTemperature());
+                backTemperatureDeviationValue.set(boundaryCondition.getTemperatureRange());
+                backTemperatureLoadTimeValue.set(boundaryCondition.getTemperatureLoadingTimePortion());
+
+                backAverageElasticEnergyValue.set(boundaryCondition.getAverageElasticEnergy());
+                backElasticEnergyDeviationValue.set(boundaryCondition.getElasticEnergyRange());
+                backElasticEnergyLoadTimeValue.set(boundaryCondition.getElasticEnergyLoadingTimePortion());
+
+                backAverageDislocationDensityValue.set(boundaryCondition.getAverageDislocationDensity());
+                backDislocationDensityDeviationValue.set(boundaryCondition.getDislocationDensityRange());
+                backDislocationDensityLoadTimeValue.set(boundaryCondition.getDislocationDensityLoadingTimePortion());
+
+                backAverageXMomentValue.set(boundaryCondition.getAverageMomentX());
+                backXMomentDeviationValue.set(boundaryCondition.getMomentRangeX());
+                backXMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionX());
+
+                backAverageYMomentValue.set(boundaryCondition.getAverageMomentY());
+                backYMomentDeviationValue.set(boundaryCondition.getMomentRangeY());
+                backYMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionY());
+
+                backAverageZMomentValue.set(boundaryCondition.getAverageMomentZ());
+                backZMomentDeviationValue.set(boundaryCondition.getMomentRangeZ());
+                backZMomentLoadTimeValue.set(boundaryCondition.getMomentLoadingTimePortionZ());
+                backFacetCheckBox.setSelected(true);
+                facetsComboBox.getItems().add(UICommon.BACK);
+                break;
+
+            default:
+                System.out.println("Incorrect facet description");
+                break;
+        }
+
+    }
+
 }

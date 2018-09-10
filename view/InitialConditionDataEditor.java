@@ -38,6 +38,7 @@ public class InitialConditionDataEditor extends Stage {
         initAllComponents();
         addAllComponents();
 
+        nameTextField.setText(initialCondition.getName());
         temperatureTextField.setText(String.valueOf(initialCondition.getTemperature()));
         elasticEnergyTextField.setText(String.valueOf(initialCondition.getElasticEnergy()));
         dislocationDensityTextField.setText(String.valueOf(initialCondition.getDislocationDensity()));
@@ -164,7 +165,7 @@ public class InitialConditionDataEditor extends Stage {
         this.setTitle("Initial Condition - Editor");
     }
 
-    public void handleOKButton(String specimenName, ComboBox comboBox){
+    public void handleOKButton(String specimenName, ComboBox comboBox, boolean editing, InitialCondition oldInitialCondition){
 
         okButton.setOnAction(e -> {
             System.out.println("Action Event: ok button is pushed");
@@ -181,9 +182,17 @@ public class InitialConditionDataEditor extends Stage {
                                                                          elasticEnergy, dislocationDensity,
                                                                          momentX, momentY, momentZ);
 
-                DataBaseUtils.addInitialCondition(initialCondition, specimenName);
-                comboBox.getItems().add(name);
-                comboBox.getSelectionModel().select(name);
+                if (editing){
+                    DataBaseUtils.initialConditionDataBase.updateInitialCondition(initialCondition, oldInitialCondition.getName());
+                    comboBox.getItems().remove(oldInitialCondition.getName());
+                    comboBox.getItems().add(initialCondition.getName());
+                    comboBox.getSelectionModel().select(initialCondition.getName());
+                }
+                else{
+                    DataBaseUtils.initialConditionDataBase.addInitialCondition(initialCondition);
+                    comboBox.getItems().add(name);
+                    comboBox.getSelectionModel().select(name);
+                }
                 this.close();
             }
             catch (Exception ex){

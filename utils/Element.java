@@ -14,10 +14,16 @@ public class Element {
     private SimpleDoubleProperty coordZ;
 
     private SimpleDoubleProperty temperature;
+    private SimpleDoubleProperty elasticEnergy;
+    private SimpleDoubleProperty dislocationDensity;
+    private SimpleDoubleProperty momentsX;
+    private SimpleDoubleProperty momentsY;
+    private SimpleDoubleProperty momentsZ;
 
-    public Element(int grainIndex, int locationType,
+    public Element(int locationType, int grainIndex,
                    double xCoord, double yCoord, double zCoord,
-                   double temperature)
+                   double temperature, double elasticEnergy, double dislocationDensity,
+                   double momentX, double momentY, double momentZ)
     {
         this.grainIndex = new SimpleIntegerProperty(grainIndex);
         this.locationType = new SimpleIntegerProperty(locationType);
@@ -27,6 +33,12 @@ public class Element {
         this.coordZ = new SimpleDoubleProperty(zCoord);
 
         this.temperature = new SimpleDoubleProperty(temperature);
+        this.elasticEnergy = new SimpleDoubleProperty(elasticEnergy);
+        this.dislocationDensity = new SimpleDoubleProperty(dislocationDensity);
+
+        this.momentsX = new SimpleDoubleProperty(momentX);
+        this.momentsY = new SimpleDoubleProperty(momentY);
+        this.momentsZ = new SimpleDoubleProperty(momentZ);
     }
 
     public int getGrainIndex() {
@@ -99,5 +111,65 @@ public class Element {
 
     public void setTemperature(double temperature) {
         this.temperature.set(temperature);
+    }
+
+    public double getElasticEnergy() {
+        return elasticEnergy.get();
+    }
+
+    public SimpleDoubleProperty elasticEnergyProperty() {
+        return elasticEnergy;
+    }
+
+    public void setElasticEnergy(double elasticEnergy) {
+        this.elasticEnergy.set(elasticEnergy);
+    }
+
+    public double getDislocationDensity() {
+        return dislocationDensity.get();
+    }
+
+    public SimpleDoubleProperty dislocationDensityProperty() {
+        return dislocationDensity;
+    }
+
+    public void setDislocationDensity(double dislocationDensity) {
+        this.dislocationDensity.set(dislocationDensity);
+    }
+
+    public double getMomentsX() {
+        return momentsX.get();
+    }
+
+    public SimpleDoubleProperty momentsXProperty() {
+        return momentsX;
+    }
+
+    public void setMomentsX(double momentsX) {
+        this.momentsX.set(momentsX);
+    }
+
+    public double getMomentsY() {
+        return momentsY.get();
+    }
+
+    public SimpleDoubleProperty momentsYProperty() {
+        return momentsY;
+    }
+
+    public void setMomentsY(double momentsY) {
+        this.momentsY.set(momentsY);
+    }
+
+    public double getMomentsZ() {
+        return momentsZ.get();
+    }
+
+    public SimpleDoubleProperty momentsZProperty() {
+        return momentsZ;
+    }
+
+    public void setMomentsZ(double momentsZ) {
+        this.momentsZ.set(momentsZ);
     }
 }

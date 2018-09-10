@@ -15,6 +15,12 @@ public class Task {
         this.totalTime = new SimpleDoubleProperty(totalTime);
     }
 
+    public Task() {
+        this.name = new SimpleStringProperty(null);
+        this.timeStep = new SimpleDoubleProperty(0.0);
+        this.totalTime = new SimpleDoubleProperty(0.0);
+    }
+
     public String getName() {
         return name.get();
     }

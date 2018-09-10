@@ -69,6 +69,10 @@ public class BoundaryCondition {
         this.momentLoadingTimePortionZ = new SimpleDoubleProperty(zMomentLoadTimePortion);
     }
 
+    public BoundaryCondition() {
+
+    }
+
     public String getName() {
         return name.get();
     }

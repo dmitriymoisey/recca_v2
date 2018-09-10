@@ -23,9 +23,9 @@ public class Specimen3DView {
     final Xform elementsGroup = new Xform();
     final PerspectiveCamera camera = new PerspectiveCamera(true);
 
-    public Specimen3DView(){
+    public Specimen3DView(int axisLength){
         buildCamera();
-        buildAxes();
+        buildAxes(axisLength);
     }
 
     public void buildCamera(){
@@ -45,7 +45,7 @@ public class Specimen3DView {
         camera.setFarClip(UICommon.CAMERA_FAR_CLIP);
     }
 
-    public void buildAxes(){
+    public void buildAxes(int axisLength){
         System.out.println("RecCA_3DPictureCreator method buildAxes(): start");
         final PhongMaterial redMaterial = new PhongMaterial();
         redMaterial.setDiffuseColor(Color.DARKRED);
@@ -62,9 +62,9 @@ public class Specimen3DView {
         /**
          *Create an Axis
          */
-        final Box xAxis = new Box(UICommon.AXIS_LENGTH , 1, 1);
-        final Box yAxis = new Box(1, UICommon.AXIS_LENGTH , 1);
-        final Box zAxis = new Box(1, 1, UICommon.AXIS_LENGTH );
+        final Box xAxis = new Box(axisLength , 1, 1);
+        final Box yAxis = new Box(1, axisLength , 1);
+        final Box zAxis = new Box(1, 1, axisLength );
 
         /**
          *set the Text to every axis
@@ -78,7 +78,7 @@ public class Specimen3DView {
         x_axis_lbl_2.setMaterial(new PhongMaterial(Color.BLACK));
         Xform x_axis_lbl = new Xform();
         x_axis_lbl.getChildren().addAll(x_axis_lbl_1,x_axis_lbl_2);
-        x_axis_lbl.setTx(UICommon.AXIS_LENGTH/1.9d);
+        x_axis_lbl.setTx(axisLength/1.9d);
         x_axis_lbl.setTy(-5.0d);
 
         final Box y_axis_box_1 = new Box(6, 1, 1);
@@ -99,7 +99,7 @@ public class Specimen3DView {
         y_axis_lbl.getChildren().addAll(y_axis_box_1,
                 y_axis_box_2,
                 y_axis_box_3);
-        y_axis_lbl.setTy(UICommon.AXIS_LENGTH/1.9d);
+        y_axis_lbl.setTy(axisLength/1.9d);
         y_axis_lbl.setTx(5.0d);
 
         final Box z_axis_box_1 = new Box(10, 1, 1);
@@ -117,7 +117,7 @@ public class Specimen3DView {
         z_axis_lbl.getChildren().addAll(z_axis_box_1,
                 z_axis_box_2,
                 z_axis_box_3);
-        z_axis_lbl.setTz(UICommon.AXIS_LENGTH/1.9d);
+        z_axis_lbl.setTz(axisLength/1.9d);
         z_axis_lbl.setTx(5.0d);
         /**
          *set the color to every axis
@@ -132,26 +132,12 @@ public class Specimen3DView {
         world.getChildren().addAll(axisGroup);
     }
 
-    public void showStructure(String specimenName){
-
+    public void showStructure(List<Element> listOfElements, List<Color> listOfColors){
         world.getChildren().remove(elementsGroup);
 
-        List<Element> listOfElements = DataBaseUtils.getSpecimenStructureData(specimenName);
-        System.out.println(listOfElements);
-        List<Integer> grainIndices = new ArrayList<>();
         for (Element element : listOfElements){
-            grainIndices.add(element.getGrainIndex());
-        }
-
-        int numberOfGrains = Collections.max(grainIndices) + 1;
-        List<Color> listOfColors = generateRandomColors(numberOfGrains);
-
-        for (Element element : listOfElements){
-            if(element.getLocationType() == 1){
-                Sphere sphere = new Sphere(0.8);
-                sphere.setTranslateX(element.getCoordX());
-                sphere.setTranslateY(element.getCoordY());
-                sphere.setTranslateZ(element.getCoordZ());
+            if (element.getLocationType() == 1){
+                Sphere sphere = generateCell(element);
                 sphere.setMaterial(new PhongMaterial(listOfColors.get(element.getGrainIndex())));
                 elementsGroup.getChildren().add(sphere);
             }
@@ -159,31 +145,105 @@ public class Specimen3DView {
         world.getChildren().add(elementsGroup);
     }
 
-    private List<Color> generateRandomColors(int numberOfColors){
-        List<Color> listOfColors = new ArrayList<Color>();
-        for (int i=0 ; i < numberOfColors ; i++){
-            listOfColors.add(Color.color(Math.random(), Math.random(), Math.random()));
-        }
-        return listOfColors;
-    }
-
-    public void showParameterDistribution(String specimenName, String taskName, int timeStep){
-
-        List<Element> elementList = DataBaseUtils.getResult(specimenName, taskName, timeStep);
-
-        ColorScale colorScale = new ColorScale("Rainbow", 300, 1300.0);
-
+    public void showParameterDistribution(List<Element> elementList, ColorScale colorScale)
+    {
         for (Element element : elementList){
-//            if(element.getLocationType() == 1){
-                Sphere cell = new Sphere(0.8);
-                cell.setTranslateX(element.getCoordX());
-                cell.setTranslateY(element.getCoordY());
-                cell.setTranslateZ(element.getCoordZ());
+            if (element.getLocationType() == 1){
+                Sphere cell = generateCell(element);
                 cell.setMaterial(new PhongMaterial(colorScale.getElementColor(element.getTemperature())));
                 elementsGroup.getChildren().add(cell);
-//            }
+            }
         }
         world.getChildren().add(elementsGroup);
+    }
+
+    public void showStructurePlane(String specimenName, char axis, double layerNumber){
+//        world.getChildren().remove(elementsGroup);
+//        List<Element> listOfElements = DataBaseUtils.getSpecimenStructureData(specimenName);
+//        System.out.println(listOfElements);
+//        List<Integer> grainIndices = new ArrayList<>();
+//        for (Element element : listOfElements){
+//            grainIndices.add(element.getGrainIndex());
+//        }
+//
+//        int numberOfGrains = Collections.max(grainIndices) + 1;
+//        List<Color> listOfColors = generateRandomColors(numberOfGrains);
+//
+//        switch (axis){
+//            case 'X':
+//                for (Element element : listOfElements){
+//                    if (layerNumber == element.getCoordX()){
+//                        Sphere cell = generateCell(element);
+//                        cell.setMaterial(new PhongMaterial(listOfColors.get(element.getGrainIndex())));
+//                        elementsGroup.getChildren().add(cell);
+//                    }
+//                }
+//                break;
+//            case 'Y':
+//                for (Element element : listOfElements){
+//                    if (layerNumber == element.getCoordY()){
+//                        Sphere cell = generateCell(element);
+//                        cell.setMaterial(new PhongMaterial(listOfColors.get(element.getGrainIndex())));
+//                        elementsGroup.getChildren().add(cell);
+//                    }
+//                }
+//                break;
+//            case 'Z':
+//                for (Element element : listOfElements){
+//                    if (layerNumber == element.getCoordZ()){
+//                        Sphere cell = generateCell(element);
+//                        cell.setMaterial(new PhongMaterial(listOfColors.get(element.getGrainIndex())));
+//                        elementsGroup.getChildren().add(cell);
+//                    }
+//                }
+//                break;
+//        }
+//        world.getChildren().add(elementsGroup);
+    }
+
+    public void showParameterDistributionPlane(String specimenName, String taskName, int timeStep, char axis, double layerNumber){
+//        world.getChildren().remove(elementsGroup);
+//        List<Element> listOfElements = DataBaseUtils.getResult(specimenName, taskName, timeStep);
+//        //TODO: implement this later
+//        ColorScale colorScale = new ColorScale("Rainbow", 300.0, 1300.0, false);
+//        switch (axis){
+//            case 'X':
+//                for (Element element : listOfElements){
+//                    if (element.getCoordX() == layerNumber){
+//                        Sphere cell = generateCell(element);
+//                        cell.setMaterial(new PhongMaterial(colorScale.getElementColor(element.getTemperature())));
+//                        elementsGroup.getChildren().add(cell);
+//                    }
+//                }
+//                break;
+//            case 'Y':
+//                for (Element element : listOfElements){
+//                    if (element.getCoordY() == layerNumber){
+//                        Sphere cell = generateCell(element);
+//                        cell.setMaterial(new PhongMaterial(colorScale.getElementColor(element.getTemperature())));
+//                        elementsGroup.getChildren().add(cell);
+//                    }
+//                }
+//                break;
+//            case 'Z':
+//                for (Element element : listOfElements){
+//                    if (element.getCoordZ() == layerNumber){
+//                        Sphere cell = generateCell(element);
+//                        cell.setMaterial(new PhongMaterial(colorScale.getElementColor(element.getTemperature())));
+//                        elementsGroup.getChildren().add(cell);
+//                    }
+//                }
+//                break;
+//        }
+//        world.getChildren().add(elementsGroup);
+    }
+
+    private Sphere generateCell(Element element){
+        Sphere cell = new Sphere(0.8);
+        cell.setTranslateX(element.getCoordX());
+        cell.setTranslateY(element.getCoordY());
+        cell.setTranslateZ(element.getCoordZ());
+        return cell;
     }
 
 }

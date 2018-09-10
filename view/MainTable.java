@@ -10,6 +10,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import utils.SpecimenData;
@@ -18,35 +19,22 @@ import java.util.Optional;
 
 public class MainTable extends BorderPane{
 
-    ObservableList<SpecimenData> data = FXCollections.observableArrayList();
-
     private TableView<SpecimenData> tableView;
-    private ToolBar toolBar;
+    private ToolBar toolBar, topToolBar;
     private TextField searchField;
     private Button structure, delete, add, edit, showResults;
 
     public MainTable() {
         toolBar = new ToolBar();
+        topToolBar = new ToolBar();
 
         searchField = new TextField();
         searchField.setPromptText("Search");
 
         tableView = new TableView<>();
-
         TableColumn specimenNameColumn = new TableColumn("Specimen Name");
         specimenNameColumn.setCellValueFactory(
                 new PropertyValueFactory<SpecimenData, String>("specimenName")
-        );
-        specimenNameColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        specimenNameColumn.setOnEditCommit(
-                new EventHandler<TableColumn.CellEditEvent<SpecimenData, String>>() {
-                    @Override
-                    public void handle(TableColumn.CellEditEvent<SpecimenData, String> event) {
-                        ((SpecimenData) event.getTableView().getItems()
-                                .get(event.getTablePosition().getRow())
-                        ).setSpecimenName(event.getNewValue());
-                    }
-                }
         );
 
         TableColumn sizeColumn = new TableColumn("Size");
@@ -106,8 +94,8 @@ public class MainTable extends BorderPane{
         );
 
         tableView.setEditable(true);
-        data.addAll(DataBaseUtils.getAllSpecimens());
-        tableView.setItems(data);
+
+        tableView.setItems(DataBaseUtils.specimenDataBase.getAllSpecimens());
 
         this.setCenter(tableView);
 
@@ -138,9 +126,12 @@ public class MainTable extends BorderPane{
                 add, s2, edit, s3, delete, s1, structure, s4, showResults
                 );
 
+        topToolBar.getItems().add(searchField);
+
         toolBar = new ToolBar();
         toolBar.getItems().add(bottomLayout);
         this.setBottom(toolBar);
+        this.setTop(topToolBar);
 
         handleEvents();
     }
@@ -151,10 +142,11 @@ public class MainTable extends BorderPane{
             if(!tableView.getSelectionModel().isEmpty())
             {
                 System.out.println("Action Event : Show Structure");
-                String selectedSpecimenName = tableView.getSelectionModel().getSelectedItem().getSpecimenName();
-                if(DataBaseUtils.checkStructure(selectedSpecimenName)){
+                SpecimenData specimenData = tableView.getSelectionModel().getSelectedItem();
+
+                if(DataBaseUtils.checkStructure(specimenData.getSpecimenName())){
                     SpecimenStructure specimenStructure = new SpecimenStructure();
-                    specimenStructure.showStructure(selectedSpecimenName);
+                    specimenStructure.showStructure(specimenData);
                 }
                 else{
                     Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Structure not created, yet!\nWould you like to create it?");
@@ -167,7 +159,7 @@ public class MainTable extends BorderPane{
             }
             else
             {
-                new Alert(Alert.AlertType.ERROR, "Nothing is chosen").show();
+                new Alert(Alert.AlertType.ERROR, UICommon.NOTHING_IS_CHOSEN).show();
             }
 
         });
@@ -175,45 +167,62 @@ public class MainTable extends BorderPane{
         delete.setOnAction(e -> {
             System.out.println("Action Event : Delete ");
             if(!tableView.getSelectionModel().isEmpty()){
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                Optional<ButtonType> choice = alert.showAndWait();
-                if(choice.get() == ButtonType.OK){
-                    SpecimenData specimenData = tableView.getSelectionModel().getSelectedItem();
-                    tableView.getItems().remove(specimenData);
+                if (UICommon.confirmation()){
+                    SpecimenData specimen = tableView.getSelectionModel().getSelectedItem();
+                    DataBaseUtils.specimenDataBase.deleteSpecimen(specimen.getSpecimenName());
+                    tableView.getItems().remove(specimen);
                 }
             }
             else{
-                new Alert(Alert.AlertType.ERROR, "Nothing is chosen").show();
+                new Alert(Alert.AlertType.ERROR, UICommon.NOTHING_IS_CHOSEN).show();
             }
         });
 
         add.setOnAction(e -> {
             SpecimenDataEditor specimenDataEditor = new SpecimenDataEditor();
-            specimenDataEditor.handleOKButton(this.data);
+            specimenDataEditor.handleOKButton(tableView, false, new SpecimenData());
             System.out.println("Action Event : Add button is pushed");
         });
 
         edit.setOnAction(e -> {
             System.out.println("Action Event: Edit Button is pushed");
             if(tableView.getSelectionModel().isEmpty()){
-                new Alert(Alert.AlertType.ERROR, "Nothing is chosen").show();
+                new Alert(Alert.AlertType.ERROR, UICommon.NOTHING_IS_CHOSEN).show();
             }
             else{
                 SpecimenDataEditor specimenDataEditor = new SpecimenDataEditor();
                 SpecimenData specimenData = tableView.getSelectionModel().getSelectedItem();
                 specimenDataEditor.setSpecimenData(specimenData);
+                specimenDataEditor.handleOKButton(tableView, true, specimenData);
             }
         });
 
         showResults.setOnAction(e -> {
             System.out.println("Action Event: show results button is pushed");
             if(tableView.getSelectionModel().isEmpty()){
-                new Alert(Alert.AlertType.ERROR, "Nothing is chosen").show();
+                new Alert(Alert.AlertType.ERROR, UICommon.NOTHING_IS_CHOSEN).show();
             }
             else{
-                String specimenName = tableView.getSelectionModel().getSelectedItem().getSpecimenName();
-                String taskName = tableView.getSelectionModel().getSelectedItem().getTask();
-                ResultsViewer resultsViewer = new ResultsViewer(specimenName, taskName);
+                SpecimenData specimenData = tableView.getSelectionModel().getSelectedItem();
+                if (DataBaseUtils.checkResults(specimenData)){
+                    ResultsViewer resultsViewer = new ResultsViewer(specimenData);
+                }
+                else {
+                    new Alert(Alert.AlertType.ERROR, UICommon.NO_RESULTS).showAndWait();
+                }
+
+            }
+        });
+
+        searchField.setOnKeyPressed(ke -> {
+            if (ke.getCode() == KeyCode.ENTER) {
+                String search = searchField.getText();
+                for (SpecimenData specimenData : tableView.getItems()){
+                    if (specimenData.getSpecimenName().contains(search)){
+                        tableView.getSelectionModel().select(specimenData);
+                        break;
+                    }
+                }
             }
         });
 

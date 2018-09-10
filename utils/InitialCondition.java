@@ -25,6 +25,16 @@ public class InitialCondition {
         this.momentZ = new SimpleDoubleProperty(zMoment);
     }
 
+    public InitialCondition() {
+        this.name = new SimpleStringProperty(null);
+        this.temperature = new SimpleDoubleProperty(0.0);
+        this.elasticEnergy = new SimpleDoubleProperty(0.0);
+        this.dislocationDensity = new SimpleDoubleProperty(0.0);
+        this.momentX = new SimpleDoubleProperty(0.0);
+        this.momentY = new SimpleDoubleProperty(0.0);
+        this.momentZ = new SimpleDoubleProperty(0.0);
+    }
+
     public String getName() {
         return name.get();
     }

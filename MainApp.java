@@ -22,12 +22,9 @@ public class MainApp extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                if(event.getEventType() == WindowEvent.WINDOW_CLOSE_REQUEST){
-                    DataBaseUtils.closeDB();
-                }
+        primaryStage.setOnCloseRequest(event -> {
+            if(event.getEventType() == WindowEvent.WINDOW_CLOSE_REQUEST){
+                DataBaseUtils.closeDB();
             }
         });
     }

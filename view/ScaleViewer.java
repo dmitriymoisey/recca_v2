@@ -9,6 +9,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.GridPane;
 import javafx.util.StringConverter;
 import javafx.util.converter.DoubleStringConverter;
@@ -17,24 +19,20 @@ public class ScaleViewer extends GridPane {
 
     private SimpleDoubleProperty maxValueProp, minValueProp;
 
-    private SimpleStringProperty firstLabelProp, secondLabelProp,
-            thirdLabelProp, fourthLabelProp, fifthLabelProp;
-
-    private TextField maxValueTextField, minValueTextField;
+    public TextField maxValueTextField, minValueTextField;
 
     private Label firstLabel, secondLabel, thirdLabel, fourthLabel, fifthLabel;
 
-    private ComboBox scaleComboBox;
-    private ObservableList scaleTypeList = FXCollections.observableArrayList("Rainbow", "Grey", "Red/Blue");
-    private CheckBox reverseScaleCheckBox;
-
-    private Button showThis;
+    public ComboBox<String> scaleComboBox;
+    private ObservableList scaleTypeList = FXCollections.observableArrayList(UICommon.RAINBOW,
+            UICommon.GRAY, UICommon.REDBLUE);
+    public CheckBox reverseScaleCheckBox;
 
     public ScaleViewer() {
         this.setPadding(new Insets(10));
-        this.setAlignment(Pos.CENTER);
-        this.setHgap(5.0);
-        this.setVgap(5.0);
+        this.setAlignment(Pos.CENTER_LEFT);
+        this.setHgap(3.0);
+        this.setVgap(3.0);
 
         initAllComponents();
         addAllComponents();
@@ -44,7 +42,9 @@ public class ScaleViewer extends GridPane {
 
     private void initAllComponents() {
         maxValueTextField = new TextField();
+        maxValueTextField.setMaxWidth(70);
         minValueTextField = new TextField();
+        minValueTextField.setMaxWidth(70);
 
         firstLabel = new Label();
         secondLabel = new Label();
@@ -54,11 +54,9 @@ public class ScaleViewer extends GridPane {
 
         scaleComboBox = new ComboBox();
         scaleComboBox.getItems().addAll(this.scaleTypeList);
+        scaleComboBox.getSelectionModel().selectFirst();
 
         reverseScaleCheckBox = new CheckBox(UICommon.REVERSE);
-
-        showThis = new Button(UICommon.SHOW_THIS);
-        showThis.setPadding(new Insets(7, 15, 7, 15));
     }
 
     private void addAllComponents() {
@@ -81,23 +79,22 @@ public class ScaleViewer extends GridPane {
 
         GridPane.setConstraints(s2, 0, 5, 2, 1, HPos.CENTER, VPos.CENTER);
 
-        GridPane.setConstraints(showThis, 0, 6, 2, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(firstLabel, 3, 0, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(secondLabel, 3, 1, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(thirdLabel, 3, 2, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(fourthLabel, 3, 3, 1, 1, HPos.CENTER, VPos.CENTER);
+        GridPane.setConstraints(fifthLabel, 3, 4, 1, 1, HPos.CENTER, VPos.CENTER);
 
         this.getChildren().addAll(
                 maxLabel, minLabel, maxValueTextField, minValueTextField,
-                s1, s2, scaleComboBox, reverseScaleCheckBox, showThis
+                s1, s2, scaleComboBox, reverseScaleCheckBox,
+                firstLabel, secondLabel, thirdLabel, fourthLabel, fifthLabel
         );
     }
 
     private void initAllProperties() {
         maxValueProp = new SimpleDoubleProperty(0.0);
         minValueProp = new SimpleDoubleProperty(0.0);
-
-        fifthLabelProp = new SimpleStringProperty();
-        secondLabelProp = new SimpleStringProperty();
-        thirdLabelProp = new SimpleStringProperty();
-        fourthLabelProp = new SimpleStringProperty();
-        fifthLabelProp = new SimpleStringProperty();
     }
 
     private void bindAllValues() {
@@ -105,15 +102,69 @@ public class ScaleViewer extends GridPane {
 
         maxValueTextField.textProperty().bindBidirectional(maxValueProp, stringConverter);
         minValueTextField.textProperty().bindBidirectional(minValueProp, stringConverter);
-
     }
 
     public void setMaxValueProp(double valueProp) {
         this.maxValueProp.set(valueProp);
     }
 
+    public double getMaxValue(){
+        return maxValueProp.get();
+    }
+
     public void setMinValueProp(double valueProp) {
         this.minValueProp.set(valueProp);
+    }
+
+    public double getMinValue(){
+        return minValueProp.get();
+    }
+
+    public String getScaleType(){
+        return scaleComboBox.getSelectionModel().getSelectedItem();
+    }
+
+    public boolean getIsReverse() {
+        return reverseScaleCheckBox.isSelected();
+    }
+
+    private ImageView imageView;
+
+    public void setScaleImage(WritableImage writableImage){
+        if (this.getChildren().contains(imageView)){
+            this.getChildren().remove(imageView);
+        }
+
+        imageView = new ImageView(writableImage);
+        GridPane.setConstraints(imageView, 2, 0, 1, 5, HPos.CENTER, VPos.CENTER);
+        this.getChildren().add(imageView);
+        setTickLabels();
+    }
+
+    private void setTickLabels(){
+        clearLabels();
+
+        double tickValue = (maxValueProp.get() - minValueProp.get())/4.0;
+
+        String firstLabelText = String.format( "%.2f", maxValueProp.get());
+        String secondLabelText = String.format("%.2f", maxValueProp.get() - tickValue);
+        String thirdLabelText = String.format("%.2f", minValueProp.get() + 2 * tickValue);
+        String fourthLabelText = String.format("%.2f", minValueProp.get() + tickValue);
+        String fifthLabelText = String.format("%.2f", minValueProp.get());
+
+        firstLabel.setText(firstLabelText);
+        secondLabel.setText(secondLabelText);
+        thirdLabel.setText(thirdLabelText);
+        fourthLabel.setText(fourthLabelText);
+        fifthLabel.setText(fifthLabelText);
+    }
+
+    private void clearLabels(){
+        this.firstLabel.setText("");
+        this.secondLabel.setText("");
+        this.thirdLabel.setText("");
+        this.fourthLabel.setText("");
+        this.fifthLabel.setText("");
     }
 
 }

@@ -59,8 +59,8 @@ public class CameraControl extends GridPane {
     }
 
     private void addAllComponents(){
-        this.setHgap(5.0);
-        this.setVgap(5.0);
+        this.setHgap(3.0);
+        this.setVgap(3.0);
         this.setAlignment(Pos.CENTER);
         this.setPadding(new Insets(10,10,10,10));
 
